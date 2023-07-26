@@ -2,3 +2,4 @@ node_modules
 build
 serviceAccountKey.json
 .env
+.DS_Store

@@ -16,6 +16,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const storage = admin.storage();
+const bucket = storage.bucket('gs://health-and-movement.appspot.com');
 
 const deleteBotUsers = async () => {
   const botUsers = await db.collection('users').where('name', '==', 'Nuage Laboratoire').get()
@@ -60,7 +61,33 @@ const updateUserSettings = async () => {
 //updateUserSettings()
 
 
+const cleanupStorageFiles = async (prefix: string) => {
+  const found = [];
+  const notFound = [];
+  const folders = await  bucket.getFiles({prefix});
+  for (const folder of folders) {
+    for (const file of folder) {
+      const path =  file.name.split('/').slice(0, 2).join('/')
+      const doc = await db.doc(path).get();
+      if (doc && doc.data()) {
+        found.push(doc)
+      } else {
+        await bucket.deleteFiles({prefix: path})
+        notFound.push(path)
+      }
+    }
+  }
 
+  console.log('Found: ', found.length)
+  console.log('Not found: ', notFound.length)
+
+}
+
+//cleanupStorageFiles('quickRoutines');
+//cleanupStorageFiles('recipes');
+//cleanupStorageFiles('tests')
+//cleanupStorageFiles('education')
+//cleanupStorageFiles('exercises')
 
 
 const app = express()

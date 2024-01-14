@@ -2,6 +2,7 @@ import * as admin from 'firebase-admin';
 import sgMail from '@sendgrid/mail'
 import express from 'express'
 import * as dotenv from 'dotenv';
+import { resizeRecipeImages } from './resizeRecipeImage';
 
 dotenv.config()
 
@@ -16,7 +17,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 const storage = admin.storage();
-const bucket = storage.bucket('gs://health-and-movement.appspot.com');
+export const bucket = storage.bucket('gs://health-and-movement.appspot.com');
 
 const deleteBotUsers = async () => {
   const botUsers = await db.collection('users').where('name', '==', 'Nuage Laboratoire').get()
@@ -83,11 +84,15 @@ const cleanupStorageFiles = async (prefix: string) => {
 
 }
 
+
+
 //cleanupStorageFiles('quickRoutines');
 //cleanupStorageFiles('recipes');
 //cleanupStorageFiles('tests')
 //cleanupStorageFiles('education')
 //cleanupStorageFiles('exercises')
+
+//resizeRecipeImages();
 
 
 const app = express()

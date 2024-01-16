@@ -3,6 +3,7 @@ import sgMail from '@sendgrid/mail'
 import express from 'express'
 import * as dotenv from 'dotenv';
 import { resizeRecipeImages } from './resizeRecipeImage';
+import { createChats } from './createChats';
 
 dotenv.config()
 
@@ -27,6 +28,29 @@ const deleteBotUsers = async () => {
       doc.ref.delete()
     }
   })
+}
+
+const cleanUpUserChats = async () => {
+  const found = []
+  const notFound = [];
+  const users = await db.collection('users').get();
+  for (const user of users.docs) {
+    const chats = await db.collection('users').doc(user.data().uid).collection('chats').get();
+    if (chats.docs.length) {
+      for (const c of chats.docs) {
+        const chat = await db.collection('chats').doc(c.id).get();
+        if (chat.exists) {
+          found.push(c.id)
+        } else {
+          await db.collection('users').doc(user.id).collection('chats').doc(c.id).delete();
+          notFound.push(c.id)
+        }
+      }
+    }
+  }
+
+  console.log('found: ' , found.length)
+  console.log('not found: ' , notFound.length)
 }
 
 //deleteBotUsers();
@@ -91,8 +115,9 @@ const cleanupStorageFiles = async (prefix: string) => {
 //cleanupStorageFiles('tests')
 //cleanupStorageFiles('education')
 //cleanupStorageFiles('exercises')
-
 //resizeRecipeImages();
+//cleanUpUserChats();
+//createChats();
 
 
 const app = express()

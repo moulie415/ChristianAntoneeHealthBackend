@@ -15,7 +15,7 @@ admin.initializeApp({
   databaseURL: "https://health-and-movement.firebaseio.com"
 });
 
-const db = admin.firestore();
+export const db = admin.firestore();
 const storage = admin.storage();
 export const bucket = storage.bucket('gs://health-and-movement.appspot.com');
 

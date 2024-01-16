@@ -1,19 +1,15 @@
 import sharp from 'sharp';
-import { bucket } from '.';
+import { bucket, db } from '.';
 
 export const resizeRecipeImages = async () => {
 
   const folders = await  bucket.getFiles({prefix: 'recipes'});
   for (const folder of folders) {
     for (const file of folder) {
-    
-      console.log(file.name)
-      const fileName = file.name.split('/')[2];
-
-      console.log(fileName)
+      const paths = file.name.split('/')
+      const fileName = paths[2];
 
       if (fileName === 'image.jpg') {
-      
         const imageWidth = 1280
         
         console.log('creating write stream')
@@ -37,7 +33,22 @@ export const resizeRecipeImages = async () => {
           uploadStream.on('finish', resolve).on('error', reject)
         );
         console.log(`finished resizing ${file.name}`)
+        const path = paths.slice(0, 2).join('/');
+        const doc = await db.doc(path).get();
         
+        const [url] = await file.getSignedUrl({
+          action: 'read',
+          expires: '03-09-2491'
+        });
+
+        if (url && doc && doc.data()) {
+          const updateObj = { ...doc.data()?.image, src: url }
+          await db.doc(path).update({ image: updateObj })
+          console.log(`recipe image ${paths[1]} updated`)
+        } else {
+          console.log(`recipe image ${paths[2]} not updated`)
+        }
+      } else if (fileName === 'recipe.pdf') {
       }
     }
   }

@@ -17,6 +17,7 @@ admin.initializeApp({
 });
 
 export const db = admin.firestore();
+export const auth = admin.auth();
 const storage = admin.storage();
 export const bucket = storage.bucket('gs://health-and-movement.appspot.com');
 
@@ -25,6 +26,7 @@ const deleteBotUsers = async () => {
   console.log(botUsers.docs.length)
   botUsers.forEach(doc => {
     if (doc.data().email.includes('@cloudtestlabaccounts.com')) {
+      auth.deleteUser(doc.data().uid)
       doc.ref.delete()
     }
   })
@@ -83,6 +85,21 @@ const updateUserSettings = async () => {
   })
 }
 
+const updateUserTargets = async () => {
+  const users = await db.collection('users').get()
+  const settings = (await db.collection('settings').get()).docs[0]?.data();
+  users.docs.forEach(async doc => {
+    const { goal, targets } = doc.data();
+    if (goal && !targets) {
+      const goalTargets = settings.workoutGoals[goal];
+      if (goalTargets) {
+        await db.collection('users').doc(doc.id).update({targets: goalTargets})
+        console.log(`user ${doc.id} updated with new ${goal} targets`)
+      }
+    }
+  })
+}
+
 //updateUserSettings()
 
 
@@ -108,8 +125,6 @@ const cleanupStorageFiles = async (prefix: string) => {
 
 }
 
-
-
 //cleanupStorageFiles('quickRoutines');
 //cleanupStorageFiles('recipes');
 //cleanupStorageFiles('tests')
@@ -118,7 +133,7 @@ const cleanupStorageFiles = async (prefix: string) => {
 //resizeRecipeImages();
 //cleanUpUserChats();
 //createChats();
-
+//updateUserTargets();
 
 const app = express()
 

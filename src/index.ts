@@ -125,21 +125,26 @@ const cleanupStorageFiles = async (prefix: string) => {
 
 }
 
-const cleanGarminActivityDetails = async () => {
-  
+const cleanCollection = async (collection: string) => {
+
   for (let i = 0; i < 200; i ++) { 
     console.log(`started on batch ${i + 1}`)
-    const docs = await db.collection('garminActivityDetails').limit(10).get();
-    
-    console.log('docs fetched')
-    const batch = db.batch();
-    docs.forEach(doc => {
-      batch.delete(doc.ref);
-    })
-    await batch.commit();
-    console.log(`deleted batch ${i + 1}`)
+    const docs = await db.collection(collection).limit(10).get();
 
+    if (docs.docs.length) {
+      console.log('docs fetched')
+      const batch = db.batch();
+      docs.forEach(doc => {
+        batch.delete(doc.ref);
+      })
+      await batch.commit();
+      console.log(`deleted batch ${i + 1}`)
+    } else {
+      break;
+    }
   }
+
+  console.log('no more items found in collection')
 }
 
 
@@ -153,7 +158,7 @@ const cleanGarminActivityDetails = async () => {
 //cleanUpUserChats();
 //createChats();
 //updateUserTargets();
-// cleanGarminActivityDetails();
+
 
 const app = express()
 
